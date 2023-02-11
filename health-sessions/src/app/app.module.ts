@@ -5,11 +5,13 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { DayOverviewComponent } from './dashboard-components/day-overview/day-overview/day-overview.component';
+import { SessionTimingComponent } from './dashboard-components/session-timing/session-timing/session-timing.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    DayOverviewComponent
+    DayOverviewComponent,
+    SessionTimingComponent
   ],
   imports: [
     BrowserModule,
