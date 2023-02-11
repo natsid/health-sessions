@@ -4,10 +4,12 @@ import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { DayOverviewComponent } from './dashboard-components/day-overview/day-overview/day-overview.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    DayOverviewComponent
   ],
   imports: [
     BrowserModule,
