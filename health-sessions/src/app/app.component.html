@@ -1,30 +1,55 @@
 <mat-toolbar color="primary">
-  <div role="heading" aria-level="1">Health Sessions</div>
+  <div role="heading" aria-level="1">{{title.getTitle()}}</div>
 </mat-toolbar>
 
-<div class="content" role="main">
-  <h2>Day-by-day overview</h2>
-  <div>For a selected day, show a simple snapshot of the following data:
-  <ul>
-    <li>number of sessions</li>
-    <li>average length of session</li>
-    <li>average distance traveled by patient</li>
-    <li>average age of patient</li>
-  </ul>
-  <day-overview></day-overview>
-  </div>
+<div class="content mat-app-background" role="main">
 
-  <h2>Distributions of session timing</h2>
-  <div>
-  <ul>
-    <li>distribution of session start time throughout a 24 hour day</li>
-    <li>distribution of session end time throughout a 24 hour day</li>
-    <li>distribution of session duration</li>
-  </ul>
-  <session-timing></session-timing>
-  </div>
+  <mat-grid-list cols="1">
 
-  <h2>TODO: Choose your own adventure</h2>
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title role="heading" aria-level="2">
+          Day-by-day overview
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        For a selected day, show a simple snapshot of the following data:
+        <ul>
+          <li>number of sessions</li>
+          <li>average length of session</li>
+          <li>average distance traveled by patient</li>
+          <li>average age of patient</li>
+        </ul>
+        <day-overview></day-overview>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title role="heading" aria-level="2">Distributions of session timing</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <ul>
+          <li>distribution of session start time throughout a 24 hour day</li>
+          <li>distribution of session end time throughout a 24 hour day</li>
+          <li>distribution of session duration</li>
+        </ul>
+        <session-timing></session-timing>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title role="heading" aria-level="2">
+          Choose your own adventure
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        TODO
+      </mat-card-content>
+    </mat-card>
+
+  </mat-grid-list>
 
   <!-- Footer -->
   <footer>
