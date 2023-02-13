@@ -1,22 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatCardModule } from '@angular/material/card';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 
 @NgModule({
     imports: [
         CommonModule,
-        BrowserAnimationsModule,
         MatToolbarModule,
+        MatGridListModule,
         MatCardModule,
     ],
     exports: [
         CommonModule,
-        BrowserAnimationsModule,
         MatToolbarModule,
+        MatGridListModule,
         MatCardModule,
     ],
 })
