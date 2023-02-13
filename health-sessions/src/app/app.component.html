@@ -6,37 +6,9 @@
 
   <mat-grid-list cols="1">
 
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title role="heading" aria-level="2">
-          Day-by-day overview
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        For a selected day, show a simple snapshot of the following data:
-        <ul>
-          <li>number of sessions</li>
-          <li>average length of session</li>
-          <li>average distance traveled by patient</li>
-          <li>average age of patient</li>
-        </ul>
-        <day-overview></day-overview>
-      </mat-card-content>
-    </mat-card>
+    <day-overview></day-overview>
 
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title role="heading" aria-level="2">Distributions of session timing</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <ul>
-          <li>distribution of session start time throughout a 24 hour day</li>
-          <li>distribution of session end time throughout a 24 hour day</li>
-          <li>distribution of session duration</li>
-        </ul>
-        <session-timing></session-timing>
-      </mat-card-content>
-    </mat-card>
+    <session-timing></session-timing>
 
     <mat-card>
       <mat-card-header>
