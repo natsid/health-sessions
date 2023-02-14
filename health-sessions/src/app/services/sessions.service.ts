@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
-// TODO: Figure out if some of these 'numbers' should be strings?
+// TODO: Move this interface to its own file.
 interface HealthSession {
   sessionDuration?: number,
   startTime?: Date,
@@ -38,6 +38,7 @@ export class SessionsService {
 
   private startTimeCounts$: Observable<number[]>|undefined;
   private stopTimeCounts$: Observable<number[]>|undefined;
+  private durationCounts$: Observable<number[]>|undefined;
 
   constructor(private http: HttpClient) {}
 
@@ -69,20 +70,48 @@ export class SessionsService {
     return this.stopTimeCounts$;
   }
   
+  /**
+   * @returns An array of counts representing the number of sessions that
+   * had a given duration. The index represents the duration, e.g., result[10]
+   * is the number of sessions that lasted for 10 units(?) of time.
+   */
   getSessionDurationCounts() {
+    if (this.durationCounts$ === undefined) {
+      this.durationCounts$ = this.sessions$.pipe(
+        map((sessions) => {
+          // TODO: Is there a way to fill this array w/o finding the max
+          // duration first?
+          const maxDuration = sessions
+              .filter((session) => session.sessionDuration !== undefined)
+              .map((session) => session.sessionDuration!)
+              .reduce((maxDuration, currentDuration) => {
+                  return maxDuration > currentDuration? maxDuration : currentDuration;
+              }, 0)
+
+          // Length of array needs to be maxDuration + 1 so there is an index
+          // for maxDuration itself.
+          const counts = new Array<number>(maxDuration + 1).fill(0);
+          sessions
+              .filter((session) => session.sessionDuration !== undefined)
+              .map((session) => counts[session.sessionDuration!] += 1);
+
+          return counts;
+        })
+      );
+
+    }
+
+    return this.durationCounts$;
   }
 
   private getHourCounts(key: 'startTime'|'stopTime') {
-    let counts = new Array<number>(NUM_HOURS_IN_DAY).fill(0);
-
     return this.sessions$.pipe(
       map((sessions) => {
-        for (let session of sessions) {
-          const hour = session[key]?.getHours();
-          if (hour !== undefined) {
-            counts[hour] += 1;
-          }
-        }
+        const counts = new Array<number>(NUM_HOURS_IN_DAY).fill(0);
+        sessions
+            .filter((session) =>
+                session[key] !== undefined && session[key]?.getHours() !== undefined)
+            .map((session) => counts[session[key]!.getHours()] += 1);
         return counts;
       })
     );
