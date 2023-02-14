@@ -15,10 +15,5 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.title.setTitle(TITLE);
-
-    this.sessionsService.getJson().subscribe({
-      next: (response) => console.log(response),
-      error: () => console.log('Request failed with error')
-    });
   }
 }

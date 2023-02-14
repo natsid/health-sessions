@@ -4,10 +4,16 @@
     </mat-card-header>
 
     <mat-card-content>
-        <ul>
-            <li>distribution of session start time throughout a 24 hour day</li>
-            <li>distribution of session end time throughout a 24 hour day</li>
-            <li>distribution of session duration</li>
-        </ul>
+        <canvas baseChart class="chart"
+                [type]="barChartType"
+                [data]="sessionTimeChartData"
+                [options]="sessionTimeChartOptions">
+        </canvas>
+        
+        <canvas baseChart class="chart"
+                [type]="barChartType"
+                [data]="sessionDurationChartData"
+                [options]="sessionDurationChartOptions">
+        </canvas>
     </mat-card-content>
 </mat-card>
