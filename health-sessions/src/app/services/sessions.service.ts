@@ -63,15 +63,17 @@ export class SessionsService {
       })
     );
 
-    // TODO: Save this in a cache map
+    // TODO: Save answers in cache map and lookup in map before performing
+    // this expensive operation.
   }
   
   /**
    * @param queryDateString the date to query for average session duration.
    *   Should be in format like '2000-01-31' or '2000-01-31T00:00:00'.
-   * @returns the average duration of sessions on the given date
+   * @returns the average duration of sessions on the given date, rounded to the
+   *   nearest integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
-  getAverageSessionDurationOnDate(queryDateString: string) {
+  getAverageSessionDurationOnDate(queryDateString: string): Observable<number|null> {
     const queryDate = SessionsService.convertStringToCorrectDate(queryDateString);
     return this.sessions$.pipe(
       map((sessions) => {
@@ -82,14 +84,17 @@ export class SessionsService {
                      SessionsService.isSameDate(session.stopTime, queryDate))
             })
             .map((session) => session.sessionDuration!);
+       
+        // No sessions on the given date. Average duration isn't meaningful.
+        if (sessionDurationsOnGivenDate.length < 1) return null;
             
-        const averageSessionLength: number = sessionDurationsOnGivenDate 
+        const sumOfSessionDurations: number = sessionDurationsOnGivenDate 
             .reduce((a, b) => {
                 if (a !== undefined && b !== undefined) return a + b;
                 else return a;
-            }, 0) / sessionDurationsOnGivenDate.length;
+            }, 0);
 
-        return averageSessionLength;
+        return Math.round(sumOfSessionDurations / sessionDurationsOnGivenDate.length);
       })
     );
 

@@ -26,21 +26,104 @@ describe('SessionsService', () => {
   it('should be created', () => {
     expect(sessionsService).toBeTruthy();
   });
-
+  
   describe('getNumSessionsOnDate', () => {
-    
+    it('zero sessions on date', waitForAsync(() => {
+      const testDate = '2015-12-01';
+      const expected = 0;
+
+      sessionsService.getNumSessionsOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted number of sessions')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+
+    it('one session on date', waitForAsync(() => {
+      const testDate = '2015-02-01';
+      const expected = 1;
+
+      sessionsService.getNumSessionsOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted number of sessions')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+
     it('multiple sessions on same date', waitForAsync(() => {
       const testDate = '2015-02-28';
-      const expectedNumSessionsOnDate = 2;
+      const expected = 3;
       
       sessionsService.getNumSessionsOnDate(testDate).subscribe({
         next: numSessions => {
           expect(numSessions)
             .withContext('expcted number of sessions')
-            .toEqual(expectedNumSessionsOnDate);
+            .toEqual(expected);
         },
       });
-      
+
+      respondWithMockData();
+    }));
+  });
+  
+  describe('getAverageSessionDurationOnDate', () => {
+    it('zero sessions on date', waitForAsync(() => {
+      const testDate = '2015-12-01';
+      const expected = null;
+
+      sessionsService.getAverageSessionDurationOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average duration of sessions')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+    
+    it('one session on date', waitForAsync(() => {
+      const testDate = '2015-02-01';
+      const expected = 86;
+
+      sessionsService.getAverageSessionDurationOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average duration of sessions')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+    
+    it('multiple sessions on date', waitForAsync(() => {
+      const testDate = '2015-02-28';
+      const expected = 66;
+
+      sessionsService.getAverageSessionDurationOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average duration of sessions')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+  });
+
+  
+  // Helper function that should be run at the bottom of most test blocks here.
+  function respondWithMockData() {
       // The following `expectOne()` will match the request's URL.
       // If no requests or multiple requests matched that URL
       // `expectOne()` would throw.
@@ -51,54 +134,16 @@ describe('SessionsService', () => {
 
       // Respond with mock data, causing Observable to resolve.
       // Subscribe callback asserts that correct data was returned.
-      req.flush(FAKE_RAW_SESSION_DATA);
+      req.flush(MOCK_RAW_SESSION_DATA);
 
       // Finally, assert that there are no outstanding requests.
       httpTestingController.verify();
-    }));
-    
-    it('one session on date', waitForAsync(() => {
-      const testDate = '2015-02-01';
-      const expectedNumSessionsOnDate = 1;
-
-      sessionsService.getNumSessionsOnDate(testDate).subscribe({
-        next: numSessions => {
-          expect(numSessions)
-            .withContext('expcted number of sessions')
-            .toEqual(expectedNumSessionsOnDate);
-        },
-      });
-      
-      const req = httpTestingController.expectOne(SESSIONS_GET_URL);
-      expect(req.request.method).toEqual('GET');
-      req.flush(FAKE_RAW_SESSION_DATA);
-      httpTestingController.verify();
-    }));
-    
-    it('zero sessions on date', waitForAsync(() => {
-      const testDate = '2015-12-01';
-      const expectedNumSessionsOnDate = 0;
-
-      sessionsService.getNumSessionsOnDate(testDate).subscribe({
-        next: numSessions => {
-          expect(numSessions)
-            .withContext('expcted number of sessions')
-            .toEqual(expectedNumSessionsOnDate);
-        },
-      });
-      
-      const req = httpTestingController.expectOne(SESSIONS_GET_URL);
-      expect(req.request.method).toEqual('GET');
-      req.flush(FAKE_RAW_SESSION_DATA);
-      httpTestingController.verify();
-    }));
-    
-  });
+  }
 });
 
 const SESSIONS_GET_URL = 'https://lo-interview.s3.us-west-2.amazonaws.com/health_sessions.json';
 
-const FAKE_RAW_SESSION_DATA = [
+const MOCK_RAW_SESSION_DATA = [
   {
     'birth year': '1991',
     'clinic_id': 143,
@@ -139,6 +184,20 @@ const FAKE_RAW_SESSION_DATA = [
     'sessionduration': 84,
     'start_time': '2015-02-28 22:11:56',
     'stop_time': '2015-02-28 23:35:56',
+    'usertype': 'Subscriber',
+  },
+  {
+    'birth year': '1956',
+    'clinic_id': 141,
+    'clinic latitude': '42.374035',
+    'clinic_longitude': '-71.101427',
+    'clinic_name': 'Canteloupe Clinic',
+    'distance': 1539.0231745867,
+    'gender': 1,
+    'provider_id': 783,
+    'sessionduration': 99,
+    'start_time': '2015-02-28 12:49:02',
+    'stop_time': '2015-02-28 14:28:02',
     'usertype': 'Subscriber',
   },
 ];
