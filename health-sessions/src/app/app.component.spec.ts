@@ -1,12 +1,16 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
+import { AppModule } from './app.module';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        RouterTestingModule
+        AppModule,
+        HttpClientTestingModule,
+        RouterTestingModule,
       ],
       declarations: [
         AppComponent
@@ -14,22 +18,24 @@ describe('AppComponent', () => {
     }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it('creates the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'health-sessions'`, () => {
+  it(`has as title 'Health Sessions'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('health-sessions');
+    fixture.detectChanges();  // ngOnInit();
+    expect(app.title.getTitle()).toEqual('Health Sessions');
   });
 
-  it('should render title', () => {
+  it('renders title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('health-sessions app is running!');
+    expect(compiled.querySelector('[role="heading"][aria-level="1"')?.textContent)
+        .toContain('Health Sessions');
   });
 });
