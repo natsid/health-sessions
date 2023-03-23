@@ -1,8 +1,9 @@
 import { Component, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
-import { SessionsService } from 'src/app/services/sessions.service';
 import { BaseChartDirective } from 'ng2-charts';
 import { combineLatestWith } from 'rxjs';
+
+import { SessionsService } from 'src/app/services/sessions.service';
 
 
 const INDEX_OF_START_STOP_TIME_CHART = 0;
@@ -34,18 +35,18 @@ const COLOR_DURATION = '#7FB3D5';
 export class SessionTimingComponent implements OnInit {
   @ViewChildren(BaseChartDirective) charts: QueryList<BaseChartDirective> | undefined;
 
-  public startStopTimeTitle = TITLE_START_STOP_TIME;
-  public durationTitle = TITLE_DURATION;
+  startStopTimeTitle = TITLE_START_STOP_TIME;
+  durationTitle = TITLE_DURATION;
   
-  public barChartType: ChartType = 'bar';
+  barChartType: ChartType = 'bar';
   
   /* Chart data and options are set on initialization. */
-  public sessionTimeChartData: ChartData<'bar'> = {datasets: []};
-  public sessionTimeChartOptions: ChartConfiguration['options']|undefined;
+  sessionTimeChartData: ChartData<'bar'> = {datasets: []};
+  sessionTimeChartOptions: ChartConfiguration['options']|undefined;
 
   /* Chart data and options are set on initialization. */
-  public sessionDurationChartData: ChartData<'bar'> = {datasets: []};
-  public sessionDurationChartOptions: ChartConfiguration['options']|undefined;
+  sessionDurationChartData: ChartData<'bar'> = {datasets: []};
+  sessionDurationChartOptions: ChartConfiguration['options']|undefined;
 
   constructor(private sessionsService: SessionsService) {}
 
