@@ -137,7 +137,7 @@ export class SessionsService {
     if (this.durationCounts$ === undefined) {
       this.durationCounts$ = this.sessions$.pipe(
         map((sessions) => {
-          // TODO: Is there a way to fill this array w/o finding the max
+          // TODO: Is there a good way to fill this array w/o finding the max
           // duration first?
           const maxDuration = sessions
               .filter((session) => session.sessionDuration !== undefined)
@@ -156,7 +156,6 @@ export class SessionsService {
           return counts;
         })
       );
-
     }
 
     return this.durationCounts$;

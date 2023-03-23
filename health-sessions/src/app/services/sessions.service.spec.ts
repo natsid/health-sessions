@@ -107,12 +107,69 @@ describe('SessionsService', () => {
     
     it('multiple sessions on date', waitForAsync(() => {
       const testDate = '2015-02-28';
-      const expected = 66;
+      const expected = 67;
 
       sessionsService.getAverageSessionDurationOnDate(testDate).subscribe({
         next: numSessions => {
           expect(numSessions)
             .withContext('expcted average duration of sessions')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+  });
+  
+  describe('getSessionStartTimeCounts', () => {
+    it('correctly counts start times', waitForAsync(() => {
+      const expected: number[] = new Array<number>(24).fill(0);
+      expected[13] = 2;
+      expected[22] = 1;
+      expected[23] = 1;
+
+      sessionsService.getSessionStartTimeCounts().subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted session start time counts')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+  });
+
+  describe('getSessionStopTimeCounts', () => {
+    it('correctly counts stop times', waitForAsync(() => {
+      const expected: number[] = new Array<number>(24).fill(0);
+      expected[0] = 1;
+      expected[15] = 2;
+      expected[23] = 1;
+
+      sessionsService.getSessionStopTimeCounts().subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted session stop time counts')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+  });
+
+  describe('getSessionDurationCounts', () => {
+    it('correctly counts session durations', waitForAsync(() => {
+      const expected: number[] = new Array<number>(100).fill(0);
+      expected[16] = 1;
+      expected[86] = 2;
+      expected[99] = 1;
+
+      sessionsService.getSessionDurationCounts().subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted session duration counts')
             .toEqual(expected);
         },
       });
@@ -181,9 +238,9 @@ const MOCK_RAW_SESSION_DATA = [
     'distance': 1372.2887327726,
     'gender': 2,
     'provider_id': 1083,
-    'sessionduration': 84,
+    'sessionduration': 86,
     'start_time': '2015-02-28 22:11:56',
-    'stop_time': '2015-02-28 23:35:56',
+    'stop_time': '2015-02-28 23:37:56',
     'usertype': 'Subscriber',
   },
   {
@@ -196,8 +253,8 @@ const MOCK_RAW_SESSION_DATA = [
     'gender': 1,
     'provider_id': 783,
     'sessionduration': 99,
-    'start_time': '2015-02-28 12:49:02',
-    'stop_time': '2015-02-28 14:28:02',
+    'start_time': '2015-02-28 13:49:02',
+    'stop_time': '2015-02-28 15:28:02',
     'usertype': 'Subscriber',
   },
 ];
