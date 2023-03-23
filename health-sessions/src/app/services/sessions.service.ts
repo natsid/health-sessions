@@ -26,6 +26,9 @@ const STOP_TIME = 'stopTime';
   providedIn: 'root'
 })
 export class SessionsService {
+  /**
+   * The Health Session JSON data processed into a list of HealthSessions.
+   */
   private _sessions$: Observable<HealthSession[]>|undefined;
   private get sessions$() {
     if (this._sessions$ === undefined) {
@@ -43,6 +46,58 @@ export class SessionsService {
   constructor(private http: HttpClient) {}
 
   /**
+   * @param queryDateString the date to query for number of sessions. Should
+   *   be in format like '2000-01-31' or '2000-01-31T00:00:00'
+   * @returns the number of sessions that either began or ended on the given
+   *    date
+   */
+  getNumSessionsOnDate(queryDateString: string): Observable<number> {
+    const queryDate = SessionsService.convertStringToCorrectDate(queryDateString);
+    return this.sessions$.pipe(
+      map((sessions) => {
+        return sessions.filter(
+            (session) => {
+              return SessionsService.isSameDate(session.startTime, queryDate) ||
+                     SessionsService.isSameDate(session.stopTime, queryDate);
+            }).length;
+      })
+    );
+
+    // TODO: Save this in a cache map
+  }
+  
+  /**
+   * @param queryDateString the date to query for average session duration.
+   *   Should be in format like '2000-01-31' or '2000-01-31T00:00:00'.
+   * @returns the average duration of sessions on the given date
+   */
+  getAverageSessionDurationOnDate(queryDateString: string) {
+    const queryDate = SessionsService.convertStringToCorrectDate(queryDateString);
+    return this.sessions$.pipe(
+      map((sessions) => {
+        const sessionDurationsOnGivenDate: number[] = sessions
+            .filter((session) => {
+              return session.sessionDuration !== undefined &&
+                     (SessionsService.isSameDate(session.startTime, queryDate) ||
+                     SessionsService.isSameDate(session.stopTime, queryDate))
+            })
+            .map((session) => session.sessionDuration!);
+            
+        const averageSessionLength: number = sessionDurationsOnGivenDate 
+            .reduce((a, b) => {
+                if (a !== undefined && b !== undefined) return a + b;
+                else return a;
+            }, 0) / sessionDurationsOnGivenDate.length;
+
+        return averageSessionLength;
+      })
+    );
+
+    // TODO: Save answers in cache map and lookup in map before performing
+    // this expensive operation.
+  }
+
+  /**
    * @returns An array of counts representing the number of sessions that
    * started within each hour of a 24-hour day. The index represents the
    * hour, e.g., result[2] is the number of sessions that began within
@@ -52,7 +107,6 @@ export class SessionsService {
     if (this.startTimeCounts$ === undefined) {
       this.startTimeCounts$ = this.getHourCounts(START_TIME);
     }
-    
     return this.startTimeCounts$;
   }
 
@@ -66,14 +120,13 @@ export class SessionsService {
     if (this.stopTimeCounts$ === undefined) {
       this.stopTimeCounts$ = this.getHourCounts(STOP_TIME);
     }
-    
     return this.stopTimeCounts$;
   }
   
   /**
    * @returns An array of counts representing the number of sessions that
-   * had a given duration. The index represents the duration, e.g., result[10]
-   * is the number of sessions that lasted for 10 units(?) of time.
+   * lasted each number of minutes. The index represents the duration, e.g.,
+   * result[10] is the number of sessions that lasted for 10 minutes.
    */
   getSessionDurationCounts() {
     if (this.durationCounts$ === undefined) {
@@ -167,5 +220,29 @@ export class SessionsService {
       }
     }
     return healthSession;
+  }
+
+  /**
+   * See the top answer on the following post to understand why this is necessary:
+   * https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off
+   * @param dateString a string like '2000-01-31' or '2000-01-31T00:00:00' to be
+   *   converted to a Date object
+   * @returns a Date corresponding to the given dateString
+   */
+  private static convertStringToCorrectDate(dateString: string): Date {
+    return new Date(dateString.replace(/-/g, '\/').replace(/T.+/, ''));
+  }
+
+  /**
+   * @param date1 a date to compare
+   * @param date2 the other date to compare
+   * @returns Whether date1 and date2 have the same year, month, and day
+   *   of month. If either or both dates are undefined, returns false.
+   */
+  private static isSameDate(date1?: Date, date2?: Date): boolean {
+    if (date1 === undefined || date2 === undefined) return false;
+    return date1.getFullYear() === date2.getFullYear()
+        && date1.getMonth() === date2.getMonth()
+        && date1.getDate() === date2.getDate();
   }
 }
