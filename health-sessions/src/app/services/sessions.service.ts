@@ -52,6 +52,12 @@ export class SessionsService {
 
   // TODO: Add tests for cache logic (I've done some manually testing with
   // console.logs so far).
+
+  // TODO: Refactor cache logic. Probably want a sesparate class for the cache
+  // maps that handle date/key conversion, lookup and store logic so that the
+  // code here is much cleaner, and so that cache storage and lookup can be
+  // unit tested.
+
   /**
    * Keys of both of the following maps have the format `date.toString()` where
    * `date` is a Date object without a timestamp.
@@ -77,13 +83,12 @@ export class SessionsService {
     const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
     const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.numSessions;
     if (maybeResult !== undefined) {
-      console.log('using num sessions cache');
       return of(maybeResult);
     }
 
     return this.getSessionsOnDate(queryDateString).pipe(
       map(sessions => sessions.length),
-      // Fill cache with number of sessions found.
+      // Populate cache with number of sessions found.
       tap(numSessions => {
         const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
         if (maybeSessionData !== undefined) {
@@ -102,8 +107,40 @@ export class SessionsService {
    *   nearest integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
   getAverageDurationOnDate(queryDateString: string): Observable<number|null> {
-    // TODO: save answers in cache map and lookup before performing expensive op
-    return this.getAverageValueOnDate(queryDateString, 'sessionDuration');
+    // Cache lookup first.
+    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.averageDuration;
+    if (maybeResult !== undefined) {
+      return of(maybeResult);
+    }
+
+    return this.getSessionsOnDate(queryDateString).pipe(
+      map(sessions => {
+        // Get a list of session durations, filtering out undefined values.
+        const durations =
+            sessions
+                .filter(session => session !== undefined && session.sessionDuration !== undefined)
+                .map(session => session.sessionDuration!);
+          
+          if (durations.length > 0) {
+            const sumOfDurations: number = durations.reduce((a, b) =>  a + b, 0);
+            return Math.round(sumOfDurations / durations.length);
+          }
+          
+          // No sessions with defined duration on given date.
+          return null;
+      }),
+      
+      // Populate cache with average duration computed.
+      tap((averageDuration: number|null) => {
+        const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
+        if (maybeSessionData !== undefined) {
+          maybeSessionData.averageAge = averageDuration;
+        } else {
+          this.aggregateSessionDataByDateCache.set(dateKey, {averageDuration})
+        }
+      })
+    );
   }
 
   /**
@@ -113,8 +150,40 @@ export class SessionsService {
    *   nearest integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
   getAverageDistanceOnDate(queryDateString: string): Observable<number|null> {
-    // TODO: save answers in cache map and lookup before performing expensive op
-    return this.getAverageValueOnDate(queryDateString, 'distance');
+    // Cache lookup first.
+    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.averageDistance;
+    if (maybeResult !== undefined) {
+      return of(maybeResult);
+    }
+
+    return this.getSessionsOnDate(queryDateString).pipe(
+      map(sessions => {
+        // Get a list of session distances, filtering out undefined values.
+        const distances =
+            sessions
+                .filter(session => session !== undefined && session.distance !== undefined)
+                .map(session => session.distance!);
+          
+          if (distances.length > 0) {
+            const sumOfDistances: number = distances.reduce((a, b) =>  a + b, 0);
+            return Math.round(sumOfDistances / distances.length);
+          }
+          
+          // No sessions with defined distance on given date.
+          return null;
+      }),
+
+      // Populate cache with average distance computed.
+      tap((averageDistance: number|null) => {
+        const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
+        if (maybeSessionData !== undefined) {
+          maybeSessionData.averageAge = averageDistance;
+        } else {
+          this.aggregateSessionDataByDateCache.set(dateKey, {averageDistance})
+        }
+      })
+    );
   }
  
   /**
@@ -128,7 +197,6 @@ export class SessionsService {
     const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
     const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.averageAge;
     if (maybeResult !== undefined) {
-      console.log('using average age cache');
       return of(maybeResult);
     }
 
@@ -150,7 +218,7 @@ export class SessionsService {
         return null;
       }),
 
-      // Fill cache with average age computed.
+      // Populate cache with average age computed.
       tap((averageAge: number|null) => {
         const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
         if (maybeSessionData !== undefined) {
@@ -162,37 +230,12 @@ export class SessionsService {
     );
   }
 
-  /**
-   * Returns an Observable of the average value for the given field across all sessions
-   * on the given date. If the given field is not of type number or if there are no
-   * sessions on the given date, returns Observable<null>.
-   */
-  private getAverageValueOnDate(queryDateString: string, field: keyof HealthSession): Observable<number|null> {
-    return this.getSessionsOnDate(queryDateString).pipe(map(sessions => {
-      // Get a list of field values, filtering out sessions with undefined values.
-      const values =
-          sessions
-              .filter(session => session !== undefined && session[field] !== undefined)
-              .map(session => session[field]!);
-        
-        // Need to check the type of values[] since there are non-number members of HealthSession.
-        if (values.length > 0 && typeof values[0] === 'number') {
-          const sumOfValues: number = (values as number[]).reduce((a, b) =>  a + b, 0);
-          return Math.round(sumOfValues / values.length);
-        }
-        
-        // No sessions on the given date or field isn't of type number.
-        return null;
-    }));
-  }
-  
   /* 
    * Returns an Observable of a list of health sessions that happened on the given date.
    */
   private getSessionsOnDate(queryDateString: string): Observable<HealthSession[]> {
     const queryDate = SessionsService.convertStringToDate(queryDateString);
     if (this.sessionsByDateCache.has(queryDate.toString())) {
-      console.log('using sessions on date cache');
       return of(this.sessionsByDateCache.get(queryDate.toString())!);
     }
     
@@ -203,6 +246,8 @@ export class SessionsService {
                      SessionsService.isSameDate(session.stopTime, queryDate);
         })
       ),
+
+      // Populate cache with sessions on the given date.
       tap((sessions: HealthSession[]) => {
         this.sessionsByDateCache.set(queryDate.toString(), sessions);
       })
