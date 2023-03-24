@@ -78,15 +78,15 @@ export class SessionsService {
    * @returns the number of sessions that either began or ended on the given
    *    date
    */
-  getNumSessionsOnDate(queryDateString: string): Observable<number> {
+  getNumSessionsOnDate(queryDate: Date): Observable<number> {
     // Cache lookup first
-    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const dateKey = SessionsService.dateToDateKey(queryDate);
     const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.numSessions;
     if (maybeResult !== undefined) {
       return of(maybeResult);
     }
 
-    return this.getSessionsOnDate(queryDateString).pipe(
+    return this.getSessionsOnDate(queryDate).pipe(
       map(sessions => sessions.length),
       // Populate cache with number of sessions found.
       tap(numSessions => {
@@ -106,15 +106,15 @@ export class SessionsService {
    * @returns the average duration of sessions on the given date, rounded to the
    *   nearest integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
-  getAverageDurationOnDate(queryDateString: string): Observable<number|null> {
+  getAverageDurationOnDate(queryDate: Date): Observable<number|null> {
     // Cache lookup first.
-    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const dateKey = SessionsService.dateToDateKey(queryDate);
     const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.averageDuration;
     if (maybeResult !== undefined) {
       return of(maybeResult);
     }
 
-    return this.getSessionsOnDate(queryDateString).pipe(
+    return this.getSessionsOnDate(queryDate).pipe(
       map(sessions => {
         // Get a list of session durations, filtering out undefined values.
         const durations =
@@ -135,7 +135,7 @@ export class SessionsService {
       tap((averageDuration: number|null) => {
         const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
         if (maybeSessionData !== undefined) {
-          maybeSessionData.averageAge = averageDuration;
+          maybeSessionData.averageDuration = averageDuration;
         } else {
           this.aggregateSessionDataByDateCache.set(dateKey, {averageDuration})
         }
@@ -149,15 +149,15 @@ export class SessionsService {
    * @returns the average distance traveled on the given date, rounded to the
    *   nearest integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
-  getAverageDistanceOnDate(queryDateString: string): Observable<number|null> {
+  getAverageDistanceOnDate(queryDate: Date): Observable<number|null> {
     // Cache lookup first.
-    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const dateKey = SessionsService.dateToDateKey(queryDate);
     const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.averageDistance;
     if (maybeResult !== undefined) {
       return of(maybeResult);
     }
 
-    return this.getSessionsOnDate(queryDateString).pipe(
+    return this.getSessionsOnDate(queryDate).pipe(
       map(sessions => {
         // Get a list of session distances, filtering out undefined values.
         const distances =
@@ -178,7 +178,7 @@ export class SessionsService {
       tap((averageDistance: number|null) => {
         const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
         if (maybeSessionData !== undefined) {
-          maybeSessionData.averageAge = averageDistance;
+          maybeSessionData.averageDistance = averageDistance;
         } else {
           this.aggregateSessionDataByDateCache.set(dateKey, {averageDistance})
         }
@@ -192,20 +192,21 @@ export class SessionsService {
    * @returns the average patient age on the given date, rounded to the nearest
    *   integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
-  getAverageAgeOnDate(queryDateString: string): Observable<number|null> {
+  getAverageAgeOnDate(queryDate: Date): Observable<number|null> {
     // Cache lookup first.
-    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const dateKey = SessionsService.dateToDateKey(queryDate);
     const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.averageAge;
     if (maybeResult !== undefined) {
       return of(maybeResult);
     }
 
-    return this.getSessionsOnDate(queryDateString).pipe(
+    return this.getSessionsOnDate(queryDate).pipe(
       map(sessions => {
-      // Get a list of field ages, filtering out sessions with undefined birth years or start times.
+      // Get a list of ages, filtering out sessions with undefined birth years or start times.
       const ages =
           sessions
-              .filter(session => session !== undefined && session.birthYear !== undefined && session.startTime !== undefined)
+              .filter(session => session !== undefined && session.startTime !== undefined &&
+                      session.birthYear !== undefined && !Number.isNaN(session.birthYear))
               // Age = year of session - birth year
               .map(session => session.startTime!.getFullYear() - session.birthYear!);
         
@@ -233,10 +234,10 @@ export class SessionsService {
   /* 
    * Returns an Observable of a list of health sessions that happened on the given date.
    */
-  private getSessionsOnDate(queryDateString: string): Observable<HealthSession[]> {
-    const queryDate = SessionsService.convertStringToDate(queryDateString);
-    if (this.sessionsByDateCache.has(queryDate.toString())) {
-      return of(this.sessionsByDateCache.get(queryDate.toString())!);
+  private getSessionsOnDate(queryDate: Date): Observable<HealthSession[]> {
+    const maybeResult = this.sessionsByDateCache.get(SessionsService.dateToDateKey(queryDate));
+    if (maybeResult !== undefined) {
+      return of(maybeResult);
     }
     
     return this.sessions$.pipe(
@@ -379,17 +380,6 @@ export class SessionsService {
   }
 
   /**
-   * See the top answer on the following post to understand why this is necessary:
-   * https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off
-   * @param dateString a string like '2000-01-31' or '2000-01-31T00:00:00' to be
-   *   converted to a Date object
-   * @returns a Date corresponding to the given dateString
-   */
-  private static convertStringToDate(dateString: string): Date {
-    return new Date(dateString.replace(/-/g, '\/').replace(/T.+/, ''));
-  }
-
-  /**
    * @param date1 a date to compare
    * @param date2 the other date to compare
    * @returns Whether date1 and date2 have the same year, month, and day
@@ -400,5 +390,13 @@ export class SessionsService {
     return date1.getFullYear() === date2.getFullYear()
         && date1.getMonth() === date2.getMonth()
         && date1.getDate() === date2.getDate();
+  }
+
+  /**
+   * @param date the date to get a key for
+   * @returns a stringified version of date, disregarding timestamp
+   */
+  private static dateToDateKey(date: Date): string {
+    return date.toDateString();
   }
 }
