@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { Observable } from 'rxjs';
 
 import { SessionsService } from 'src/app/services/sessions.service';
 
@@ -15,24 +17,29 @@ import { SessionsService } from 'src/app/services/sessions.service';
   styleUrls: ['./day-overview.component.scss']
 })
 export class DayOverviewComponent {
-  // TODO: Update filter and startDate to be based on the data we get back.
-  // Will need to use observables w/ async pipe in template.
-  myFilter = (d: Date | null): boolean => {
-    const day = (d || new Date()).getDay();
-    // Prevent Saturday and Sunday from being selected.
-    return day !== 0 && day !== 6;
-  };
-  startDate = new Date(2015, 0, 1);
+  // TODO: Create a helper in SessionService that provides the appropriate
+  // date range instead of hardcoding dates here. 
+  datePickerStartDate = new Date(2015, 1, 1);
+  datePickerStopDate = new Date(2015, 2, 1);
 
-  // TODO: Get each piece of data for a hard-coded date at first.
+  // TODO: In retrospect, I would just compute all of these at the same all
+  // together in SessionsService since, in our use case, we always want to get
+  // all pieces of the day overview.
+  // Something like this.sessionsService.getDayOverview(date);
+  numSessions$?: Observable<number>;
+  averageDuration$?: Observable<number|null>;
+  averageDistance$?: Observable<number|null>;
+  averageAge$?: Observable<number|null>;
 
   constructor(private sessionsService: SessionsService) {
-    sessionsService.getNumSessionsOnDate('2015-02-01 00:10:58').subscribe({
-      next: numSessions => console.log(numSessions),
-    });
-    
-    sessionsService.getAverageDurationOnDate('2015-02-01 00:10:58').subscribe({
-      next: averageDuration => console.log(averageDuration),
-    });
+  }
+
+  onDateInput(event: MatDatepickerInputEvent<Date>) {
+    if (event.value !== null) {
+      this.numSessions$ = this.sessionsService.getNumSessionsOnDate(event.value);
+      this.averageDuration$ = this.sessionsService.getAverageDurationOnDate(event.value);
+      this.averageDistance$ = this.sessionsService.getAverageDistanceOnDate(event.value);
+      this.averageAge$ = this.sessionsService.getAverageAgeOnDate(event.value);
+    }
   }
 }

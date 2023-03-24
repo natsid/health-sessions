@@ -31,7 +31,10 @@ describe('SessionsService', () => {
   
   describe('getNumSessionsOnDate', () => {
     it('zero sessions on date', waitForAsync(() => {
-      const testDate = '2015-12-01';
+      // See the top answer on the following post to understand why we must use the
+      // '2015/02/01' format of date instead of '2015-02-01'.
+      // https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off
+      const testDate = new Date('2015/12/01');
       const expected = 0;
 
       sessionsService.getNumSessionsOnDate(testDate).subscribe({
@@ -46,7 +49,7 @@ describe('SessionsService', () => {
     }));
 
     it('one session on date', waitForAsync(() => {
-      const testDate = '2015-02-01';
+      const testDate = new Date('2015/02/01');
       const expected = 1;
 
       sessionsService.getNumSessionsOnDate(testDate).subscribe({
@@ -61,7 +64,7 @@ describe('SessionsService', () => {
     }));
 
     it('multiple sessions on same date', waitForAsync(() => {
-      const testDate = '2015-02-28';
+      const testDate = new Date('2015/02/28');
       const expected = 3;
       
       sessionsService.getNumSessionsOnDate(testDate).subscribe({
@@ -78,7 +81,7 @@ describe('SessionsService', () => {
   
   describe('getAverageDurationOnDate', () => {
     it('zero sessions on date', waitForAsync(() => {
-      const testDate = '2015-12-01';
+      const testDate = new Date('2015/12/01');
       const expected = null;
 
       sessionsService.getAverageDurationOnDate(testDate).subscribe({
@@ -93,7 +96,7 @@ describe('SessionsService', () => {
     }));
     
     it('one session on date', waitForAsync(() => {
-      const testDate = '2015-02-01';
+      const testDate = new Date('2015/02/01');
       const expected = 86;
 
       sessionsService.getAverageDurationOnDate(testDate).subscribe({
@@ -108,7 +111,7 @@ describe('SessionsService', () => {
     }));
     
     it('multiple sessions on date', waitForAsync(() => {
-      const testDate = '2015-02-28';
+      const testDate = new Date('2015/02/28');
       const expected = 67;
 
       sessionsService.getAverageDurationOnDate(testDate).subscribe({
@@ -125,7 +128,7 @@ describe('SessionsService', () => {
   
   describe('getAverageDistanceOnDate', () => {
     it('zero sessions on date', waitForAsync(() => {
-      const testDate = '2015-12-01';
+      const testDate = new Date('2015/12/01');
       const expected = null;
 
       sessionsService.getAverageDistanceOnDate(testDate).subscribe({
@@ -140,7 +143,7 @@ describe('SessionsService', () => {
     }));
     
     it('one session on date', waitForAsync(() => {
-      const testDate = '2015-02-01';
+      const testDate = new Date('2015/02/01');
       const expected = 905;
 
       sessionsService.getAverageDistanceOnDate(testDate).subscribe({
@@ -155,7 +158,7 @@ describe('SessionsService', () => {
     }));
     
     it('multiple sessions on date', waitForAsync(() => {
-      const testDate = '2015-02-28';
+      const testDate = new Date('2015/02/28');
       const expected = 1272;
 
       sessionsService.getAverageDistanceOnDate(testDate).subscribe({
@@ -171,8 +174,10 @@ describe('SessionsService', () => {
   });
   
   describe('getAverageAgeOnDate', () => {
+    // TODO: Add test for birthYear NaN.
+
     it('zero sessions on date', waitForAsync(() => {
-      const testDate = '2015-12-01';
+      const testDate = new Date('2015/12/01');
       const expected = null;
 
       sessionsService.getAverageAgeOnDate(testDate).subscribe({
@@ -187,7 +192,7 @@ describe('SessionsService', () => {
     }));
     
     it('one session on date', waitForAsync(() => {
-      const testDate = '2015-02-01';
+      const testDate = new Date('2015/02/01');
       const expected = 24;
 
       sessionsService.getAverageAgeOnDate(testDate).subscribe({
@@ -202,7 +207,7 @@ describe('SessionsService', () => {
     }));
     
     it('multiple sessions on date', waitForAsync(() => {
-      const testDate = '2015-02-28';
+      const testDate = new Date('2015/02/28');
       const expected = 40;
 
       sessionsService.getAverageAgeOnDate(testDate).subscribe({
