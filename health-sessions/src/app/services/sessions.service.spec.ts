@@ -26,6 +26,8 @@ describe('SessionsService', () => {
   it('should be created', () => {
     expect(sessionsService).toBeTruthy();
   });
+
+  // TODO: Add tests for cache logic.
   
   describe('getNumSessionsOnDate', () => {
     it('zero sessions on date', waitForAsync(() => {
