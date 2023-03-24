@@ -52,8 +52,7 @@ export class SessionsService {
    *    date
    */
   getNumSessionsOnDate(queryDateString: string): Observable<number> {
-    // TODO: Save answers in cache map and lookup in map before performing
-    // this expensive operation.
+    // TODO: save answers in cache map and lookup before performing expensive op
     return this.getSessionsOnDate(queryDateString).pipe(map(sessions => sessions.length));
   }
 
@@ -63,23 +62,68 @@ export class SessionsService {
    * @returns the average duration of sessions on the given date, rounded to the
    *   nearest integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
-  getAverageSessionDurationOnDate(queryDateString: string): Observable<number|null> {
-    // TODO: Save answers in cache map and lookup in map before performing
-    // this expensive operation.
+  getAverageDurationOnDate(queryDateString: string): Observable<number|null> {
+    // TODO: save answers in cache map and lookup before performing expensive op
+    return this.getAverageValueOnDate(queryDateString, 'sessionDuration');
+  }
+
+  /**
+   * @param queryDateString the date to query for average distanced traveled.
+   *   Should be in format like '2000-01-31' or '2000-01-31T00:00:00'.
+   * @returns the average distance traveled on the given date, rounded to the
+   *   nearest integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
+   */
+  getAverageDistanceOnDate(queryDateString: string): Observable<number|null> {
+    // TODO: save answers in cache map and lookup before performing expensive op
+    return this.getAverageValueOnDate(queryDateString, 'distance');
+  }
+ 
+  /**
+   * @param queryDateString the date to query for average patient age.
+   *   Should be in format like '2000-01-31' or '2000-01-31T00:00:00'.
+   * @returns the average patient age on the given date, rounded to the nearest
+   *   integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
+   */
+  getAverageAgeOnDate(queryDateString: string): Observable<number|null> {
     return this.getSessionsOnDate(queryDateString).pipe(map(sessions => {
-      // Get a list of durations, filtering out sessions with undefined duration.
-      const sessionDurationsOnGivenDate: number[] =
+      // Get a list of field ages, filtering out sessions with undefined birth years or start times.
+      const ages =
           sessions
-              .filter(session => session?.sessionDuration !== undefined)
-              .map(session => session.sessionDuration!);
+              .filter(session => session !== undefined && session.birthYear !== undefined && session.startTime !== undefined)
+              // Age = year of session - birth year
+              .map(session => session.startTime!.getFullYear() - session.birthYear!);
         
-        // No sessions on the given date. Average duration isn't meaningful.
-        if (sessionDurationsOnGivenDate.length < 1) return null;
+        if (ages.length > 0) {
+          const sumOfAges: number = ages.reduce((a, b) =>  a + b, 0);
+          return Math.round(sumOfAges / ages.length);
+        }
+        
+        // No sessions on the given date or undefined birth years.
+        return null;
+    }));
+  }
 
-        const sumOfSessionDurations: number = sessionDurationsOnGivenDate 
-            .reduce((a, b) =>  a + b, 0);
-
-        return Math.round(sumOfSessionDurations / sessionDurationsOnGivenDate.length);
+  /**
+   * Returns an Observable of the average value for the given field across all sessions
+   * on the given date. If the given field is not of type number or if there are no
+   * sessions on the given date, returns Observable<null>.
+   */
+  private getAverageValueOnDate(queryDateString: string, field: keyof HealthSession): Observable<number|null> {
+    return this.getSessionsOnDate(queryDateString).pipe(map(sessions => {
+      // Get a list of field values, filtering out sessions with undefined values.
+      const values =
+          sessions
+              .filter(session => session !== undefined && session[field] !== undefined)
+              .map(session => session[field]!);
+        
+        // Need to check the type of values[] since there are non-number members of HealthSession.
+        if (values.length > 0 && typeof values[0] === 'number') {
+          const sumOfValues: number = (values as number[]).reduce((a, b) =>  a + b, 0);
+          return Math.round(sumOfValues / values.length);
+        }
+        
+        // No sessions on the given date or field isn't of type number.
+        return null;
     }));
   }
   

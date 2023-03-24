@@ -31,7 +31,7 @@ export class DayOverviewComponent {
       next: numSessions => console.log(numSessions),
     });
     
-    sessionsService.getAverageSessionDurationOnDate('2015-02-01 00:10:58').subscribe({
+    sessionsService.getAverageDurationOnDate('2015-02-01 00:10:58').subscribe({
       next: averageDuration => console.log(averageDuration),
     });
   }

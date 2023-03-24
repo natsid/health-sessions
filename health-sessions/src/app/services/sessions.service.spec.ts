@@ -74,12 +74,12 @@ describe('SessionsService', () => {
     }));
   });
   
-  describe('getAverageSessionDurationOnDate', () => {
+  describe('getAverageDurationOnDate', () => {
     it('zero sessions on date', waitForAsync(() => {
       const testDate = '2015-12-01';
       const expected = null;
 
-      sessionsService.getAverageSessionDurationOnDate(testDate).subscribe({
+      sessionsService.getAverageDurationOnDate(testDate).subscribe({
         next: numSessions => {
           expect(numSessions)
             .withContext('expcted average duration of sessions')
@@ -94,7 +94,7 @@ describe('SessionsService', () => {
       const testDate = '2015-02-01';
       const expected = 86;
 
-      sessionsService.getAverageSessionDurationOnDate(testDate).subscribe({
+      sessionsService.getAverageDurationOnDate(testDate).subscribe({
         next: numSessions => {
           expect(numSessions)
             .withContext('expcted average duration of sessions')
@@ -109,10 +109,104 @@ describe('SessionsService', () => {
       const testDate = '2015-02-28';
       const expected = 67;
 
-      sessionsService.getAverageSessionDurationOnDate(testDate).subscribe({
+      sessionsService.getAverageDurationOnDate(testDate).subscribe({
         next: numSessions => {
           expect(numSessions)
             .withContext('expcted average duration of sessions')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+  });
+  
+  describe('getAverageDistanceOnDate', () => {
+    it('zero sessions on date', waitForAsync(() => {
+      const testDate = '2015-12-01';
+      const expected = null;
+
+      sessionsService.getAverageDistanceOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average distance traveled')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+    
+    it('one session on date', waitForAsync(() => {
+      const testDate = '2015-02-01';
+      const expected = 905;
+
+      sessionsService.getAverageDistanceOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average distance traveled')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+    
+    it('multiple sessions on date', waitForAsync(() => {
+      const testDate = '2015-02-28';
+      const expected = 1272;
+
+      sessionsService.getAverageDistanceOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average distance traveled')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+  });
+  
+  describe('getAverageAgeOnDate', () => {
+    it('zero sessions on date', waitForAsync(() => {
+      const testDate = '2015-12-01';
+      const expected = null;
+
+      sessionsService.getAverageAgeOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average age')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+    
+    it('one session on date', waitForAsync(() => {
+      const testDate = '2015-02-01';
+      const expected = 24;
+
+      sessionsService.getAverageAgeOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average age')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
+    
+    it('multiple sessions on date', waitForAsync(() => {
+      const testDate = '2015-02-28';
+      const expected = 40;
+
+      sessionsService.getAverageAgeOnDate(testDate).subscribe({
+        next: numSessions => {
+          expect(numSessions)
+            .withContext('expcted average age')
             .toEqual(expected);
         },
       });
