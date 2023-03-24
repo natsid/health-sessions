@@ -1,21 +1,32 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { map, Observable, of, tap } from 'rxjs';
 
-// TODO: Move this interface to its own file.
+// TODO: Move interfaces to separate file.
 interface HealthSession {
-  sessionDuration?: number,
-  startTime?: Date,
-  stopTime?: Date,
-  clinicId?: number,
-  clinicName?: string,
-  clinicLatitude?: string,
-  clinicLongitude?: string,
-  providerId?: number,
-  userType?: "Subscriber"|"Patient",
-  birthYear?: number|null,
-  gender?: 0|1|2,
-  distance?: number,
+  sessionDuration?: number;
+  startTime?: Date;
+  stopTime?: Date;
+  clinicId?: number;
+  clinicName?: string;
+  clinicLatitude?: string;
+  clinicLongitude?: string;
+  providerId?: number;
+  userType?: "Subscriber"|"Patient";
+  birthYear?: number|null;
+  gender?: 0|1|2;
+  distance?: number;
+}
+
+/**
+ * Aggregate session data, typically used to aggregate session date on
+ * a given date.
+ */
+interface AggregateSessionData {
+  numSessions?: number;
+  averageDuration?: number|null;
+  averageDistance?: number|null;
+  averageAge?: number|null;
 }
 
 const NUM_HOURS_IN_DAY = 24;
@@ -39,6 +50,16 @@ export class SessionsService {
     return this._sessions$;
   }
 
+  // TODO: Add tests for cache logic (I've done some manually testing with
+  // console.logs so far).
+  /**
+   * Keys of both of the following maps have the format `date.toString()` where
+   * `date` is a Date object without a timestamp.
+   * Can't use actual Date objects as keys since key lookup wouldn't work well.
+   */
+  private sessionsByDateCache: Map<string, HealthSession[]> = new Map<string, HealthSession[]>();
+  private aggregateSessionDataByDateCache: Map<string, AggregateSessionData> = new Map<string, AggregateSessionData>(); 
+
   private startTimeCounts$: Observable<number[]>|undefined;
   private stopTimeCounts$: Observable<number[]>|undefined;
   private durationCounts$: Observable<number[]>|undefined;
@@ -52,8 +73,26 @@ export class SessionsService {
    *    date
    */
   getNumSessionsOnDate(queryDateString: string): Observable<number> {
-    // TODO: save answers in cache map and lookup before performing expensive op
-    return this.getSessionsOnDate(queryDateString).pipe(map(sessions => sessions.length));
+    // Cache lookup first
+    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.numSessions;
+    if (maybeResult !== undefined) {
+      console.log('using num sessions cache');
+      return of(maybeResult);
+    }
+
+    return this.getSessionsOnDate(queryDateString).pipe(
+      map(sessions => sessions.length),
+      // Fill cache with number of sessions found.
+      tap(numSessions => {
+        const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
+        if (maybeSessionData !== undefined) {
+          maybeSessionData.numSessions = numSessions;
+        } else {
+          this.aggregateSessionDataByDateCache.set(dateKey, {numSessions})
+        }
+      })
+    );
   }
 
   /**
@@ -85,7 +124,16 @@ export class SessionsService {
    *   integer, e.g., 8.1 will round down to 8 and 8.6 will round up to 9
    */
   getAverageAgeOnDate(queryDateString: string): Observable<number|null> {
-    return this.getSessionsOnDate(queryDateString).pipe(map(sessions => {
+    // Cache lookup first.
+    const dateKey = SessionsService.convertStringToDate(queryDateString).toString();
+    const maybeResult = this.aggregateSessionDataByDateCache.get(dateKey)?.averageAge;
+    if (maybeResult !== undefined) {
+      console.log('using average age cache');
+      return of(maybeResult);
+    }
+
+    return this.getSessionsOnDate(queryDateString).pipe(
+      map(sessions => {
       // Get a list of field ages, filtering out sessions with undefined birth years or start times.
       const ages =
           sessions
@@ -100,7 +148,18 @@ export class SessionsService {
         
         // No sessions on the given date or undefined birth years.
         return null;
-    }));
+      }),
+
+      // Fill cache with average age computed.
+      tap((averageAge: number|null) => {
+        const maybeSessionData = this.aggregateSessionDataByDateCache.get(dateKey);
+        if (maybeSessionData !== undefined) {
+          maybeSessionData.averageAge = averageAge;
+        } else {
+          this.aggregateSessionDataByDateCache.set(dateKey, {averageAge})
+        }
+      })
+    );
   }
 
   /**
@@ -128,18 +187,26 @@ export class SessionsService {
   }
   
   /* 
-   * @param queryDateString 
-   * @returns an Observable of a list of health sessions that happened on the given date
+   * Returns an Observable of a list of health sessions that happened on the given date.
    */
   private getSessionsOnDate(queryDateString: string): Observable<HealthSession[]> {
-    const queryDate = SessionsService.convertStringToCorrectDate(queryDateString);
+    const queryDate = SessionsService.convertStringToDate(queryDateString);
+    if (this.sessionsByDateCache.has(queryDate.toString())) {
+      console.log('using sessions on date cache');
+      return of(this.sessionsByDateCache.get(queryDate.toString())!);
+    }
+    
     return this.sessions$.pipe(
-      map((sessions: HealthSession[]) => {
-        return sessions.filter((session: HealthSession) => {
+      map((sessions: HealthSession[]) =>
+        sessions.filter((session: HealthSession) => {
               return SessionsService.isSameDate(session.startTime, queryDate) ||
-                     SessionsService.isSameDate(session.stopTime, queryDate)
-         })
-      }));
+                     SessionsService.isSameDate(session.stopTime, queryDate);
+        })
+      ),
+      tap((sessions: HealthSession[]) => {
+        this.sessionsByDateCache.set(queryDate.toString(), sessions);
+      })
+    );
   }
 
   /**
@@ -273,7 +340,7 @@ export class SessionsService {
    *   converted to a Date object
    * @returns a Date corresponding to the given dateString
    */
-  private static convertStringToCorrectDate(dateString: string): Date {
+  private static convertStringToDate(dateString: string): Date {
     return new Date(dateString.replace(/-/g, '\/').replace(/T.+/, ''));
   }
 
