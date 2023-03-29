@@ -9,12 +9,14 @@ import { DayOverviewComponent } from './dashboard-components/day-overview/day-ov
 import { SessionTimingComponent } from './dashboard-components/session-timing/session-timing.component';
 import { MaterialModule } from './material.module';
 import { NgChartsModule } from 'ng2-charts';
+import { ClinicsMapComponent } from './dashboard-components/clinics-map/clinics-map.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     DayOverviewComponent,
-    SessionTimingComponent
+    SessionTimingComponent,
+    ClinicsMapComponent
   ],
   imports: [
     BrowserModule,
