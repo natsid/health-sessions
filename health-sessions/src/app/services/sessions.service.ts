@@ -82,16 +82,28 @@ export class SessionsService {
 
   constructor(private http: HttpClient) {}
 
-  getClinicLocations() {
+  getClinics(): Observable<Clinic[]> {
     return this.sessions$.pipe(
-      map((sessions: HealthSession[]) =>
-        sessions  // TODO: map to Marker (define Marker type here)
-      ),
+      map((sessions: HealthSession[]) => {
+        // TODO: No duplicates
+        return sessions.filter((session: HealthSession) => 
+            session.clinicName !== undefined &&
+            session.clinicLatitude !== undefined && !Number.isNaN(session.clinicLatitude) &&
+            session.clinicLongitude !== undefined && !Number.isNaN(session.clinicLongitude))
+          .map((session: HealthSession) => {
+            return {
+              name: session.clinicName!,
+              position: {
+                lat: parseInt(session.clinicLatitude!),
+                lng: parseInt(session.clinicLongitude!)
+              },
+            };
+          });
+      }),
 
-      // Populate cache with sessions on the given date.
-      tap((sessions: HealthSession[]) => {
-        // TODO: cache response
-        // The type here will not be HealthSession
+      // Populate cache with clinics.
+      tap((clinics: Clinic[]) => {
+        // TODO
       })
     );
 

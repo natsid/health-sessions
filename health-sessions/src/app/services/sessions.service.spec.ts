@@ -28,6 +28,11 @@ describe('SessionsService', () => {
   });
 
   // TODO: Add tests for cache logic.
+
+
+  describe('getClinics', () => {
+    // TODO
+  });
   
   describe('getNumSessionsOnDate', () => {
     it('zero sessions on date', waitForAsync(() => {
