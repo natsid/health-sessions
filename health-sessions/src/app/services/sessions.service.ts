@@ -85,17 +85,17 @@ export class SessionsService {
   getClinics(): Observable<Clinic[]> {
     return this.sessions$.pipe(
       map((sessions: HealthSession[]) => {
-        // TODO: No duplicates
         return sessions.filter((session: HealthSession) => 
             session.clinicName !== undefined &&
             session.clinicLatitude !== undefined && !Number.isNaN(session.clinicLatitude) &&
             session.clinicLongitude !== undefined && !Number.isNaN(session.clinicLongitude))
           .map((session: HealthSession) => {
+            console.log('in service');
             return {
               name: session.clinicName!,
               position: {
-                lat: parseInt(session.clinicLatitude!),
-                lng: parseInt(session.clinicLongitude!)
+                lat: parseFloat(session.clinicLatitude!),
+                lng: parseFloat(session.clinicLongitude!)
               },
             };
           });
@@ -323,7 +323,7 @@ export class SessionsService {
    * lasted each number of minutes. The index represents the duration, e.g.,
    * result[10] is the number of sessions that lasted for 10 minutes.
    */
-  getSessionDurationCounts() {
+  getSessionDurationCounts(): Observable<number[]> {
     if (this.durationCounts$ === undefined) {
       this.durationCounts$ = this.sessions$.pipe(
         map((sessions) => {
@@ -351,7 +351,7 @@ export class SessionsService {
     return this.durationCounts$;
   }
 
-  private getHourCounts(key: 'startTime'|'stopTime') {
+  private getHourCounts(key: 'startTime'|'stopTime'): Observable<number[]> {
     return this.sessions$.pipe(
       map((sessions) => {
         const counts = new Array<number>(NUM_HOURS_IN_DAY).fill(0);

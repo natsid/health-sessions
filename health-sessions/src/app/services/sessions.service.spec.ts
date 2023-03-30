@@ -29,9 +29,37 @@ describe('SessionsService', () => {
 
   // TODO: Add tests for cache logic.
 
-
   describe('getClinics', () => {
-    // TODO
+    it('TODO', waitForAsync(() => {
+      const expected = [
+        {
+          name: 'Apple Clinic',
+          position: { lat: 42.366426, lng: -71.105495 }
+        },
+        {
+          name: 'Apple Clinic',
+          position: { lat: 42.366426, lng: -71.105495 }
+        },
+        {
+          name: 'Banana Clinic',
+          position: { lat: 42.370803, lng: -71.104412 }
+        },
+        {
+          name: 'Canteloupe Clinic',
+          position: { lat: 42.374035, lng: -71.101427 }
+        },
+      ];
+
+      sessionsService.getClinics().subscribe({
+        next: clinics => {
+          expect(clinics)
+            .withContext('expcted clinics')
+            .toEqual(expected);
+        },
+      });
+
+      respondWithMockData();
+    }));
   });
   
   describe('getNumSessionsOnDate', () => {
