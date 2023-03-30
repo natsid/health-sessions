@@ -30,12 +30,8 @@ describe('SessionsService', () => {
   // TODO: Add tests for cache logic.
 
   describe('getClinics', () => {
-    it('TODO', waitForAsync(() => {
+    it('returns list of unique clinics with their lat and lng coordinates', waitForAsync(() => {
       const expected = [
-        {
-          name: 'Apple Clinic',
-          position: { lat: 42.366426, lng: -71.105495 }
-        },
         {
           name: 'Apple Clinic',
           position: { lat: 42.366426, lng: -71.105495 }

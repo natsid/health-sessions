@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { GoogleMap } from '@angular/google-maps';
-import { catchError, map, Observable, of, shareReplay } from 'rxjs';
+import { catchError, map, Observable, of, shareReplay, tap } from 'rxjs';
 
-import { Clinic } from 'src/app/services/sessions.service';
+import { Clinic, SessionsService } from 'src/app/services/sessions.service';
 import { MAPS_API_KEY } from './maps-api-key';
 
 @Component({
@@ -21,8 +21,7 @@ export class ClinicsMapComponent implements OnInit {
     }
   }
 
-  apiLoaded: Observable<boolean>;
-  // apiLoaded: ReplaySubject<boolean>;
+  mapsApiLoaded: Observable<boolean>;
 
   /**
    * Important note: In order for the Maps API to be loaded, you must create
@@ -30,9 +29,9 @@ export class ClinicsMapComponent implements OnInit {
    * valid Maps API key. Navigate to the following to find your keys:
    * https://console.cloud.google.com/google/maps-apis/credentials.
    */
-  constructor(httpClient: HttpClient) {
+  constructor(httpClient: HttpClient, private sessionsService: SessionsService) {
     // Lazy load the Maps API
-    this.apiLoaded = httpClient.jsonp(`https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}`, 'callback')
+    this.mapsApiLoaded = httpClient.jsonp(`https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}`, 'callback')
         .pipe(
           map(() => true),
           catchError(() => of(false)),
@@ -42,6 +41,11 @@ export class ClinicsMapComponent implements OnInit {
 
   // TODO: Implement method on SessionsService to get list of markers (lat, long, name)
   ngOnInit(): void {
+    this.sessionsService.getClinics().subscribe(
+      (clinics: Clinic[]) =>  this.clinics.push(...clinics)
+    );
+
+    // TODO: remove
     this.clinics.push({
       position: {
         lat: 42.366426,

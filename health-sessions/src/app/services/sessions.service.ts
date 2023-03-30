@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable, of, tap } from 'rxjs';
+import { map, Observable, of, ReplaySubject, shareReplay, tap } from 'rxjs';
 
 // TODO: Move interfaces to separate file.
 
@@ -55,7 +55,7 @@ export class SessionsService {
     if (this._sessions$ === undefined) {
       this._sessions$ =
           this.http.get<any[]>('https://lo-interview.s3.us-west-2.amazonaws.com/health_sessions.json')
-              .pipe(map((result) => result.map(this.rawJsonToHealthSession)));
+              .pipe(map((result) => result.map(this.rawJsonToHealthSession)), shareReplay());
     }
     return this._sessions$;
   }
@@ -75,6 +75,7 @@ export class SessionsService {
    */
   private sessionsByDateCache: Map<string, HealthSession[]> = new Map<string, HealthSession[]>();
   private aggregateSessionDataByDateCache: Map<string, AggregateSessionData> = new Map<string, AggregateSessionData>(); 
+  private clincisCache: Clinic[]|undefined = undefined;
 
   private startTimeCounts$: Observable<number[]>|undefined;
   private stopTimeCounts$: Observable<number[]>|undefined;
@@ -82,31 +83,45 @@ export class SessionsService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * @returns an observable of a list of unique clinics from health session data
+   */
   getClinics(): Observable<Clinic[]> {
+    // Cache lookup first.
+    if (this.clincisCache !== undefined) {
+      return of(this.clincisCache);
+    }
+
     return this.sessions$.pipe(
       map((sessions: HealthSession[]) => {
-        return sessions.filter((session: HealthSession) => 
-            session.clinicName !== undefined &&
-            session.clinicLatitude !== undefined && !Number.isNaN(session.clinicLatitude) &&
-            session.clinicLongitude !== undefined && !Number.isNaN(session.clinicLongitude))
-          .map((session: HealthSession) => {
-            console.log('in service');
-            return {
+        const clinics: Clinic[] = [];
+        const seenClinics = new Set<string>();
+
+        // Need to use old-fashioned for-loop instead of .filter.map in order to
+        // only add new unique clinics to the list.
+        for (let i = 0; i < sessions.length; i++) {
+          const session = sessions[i];
+          if (sessions[i].clinicName !== undefined && !seenClinics.has(sessions[i].clinicName!) &&
+              sessions[i].clinicLatitude !== undefined && !Number.isNaN(sessions[i].clinicLatitude) &&
+              sessions[i].clinicLongitude !== undefined && !Number.isNaN(sessions[i].clinicLongitude)) {
+            seenClinics.add(sessions[i].clinicName!);
+            clinics.push({
               name: session.clinicName!,
               position: {
                 lat: parseFloat(session.clinicLatitude!),
                 lng: parseFloat(session.clinicLongitude!)
-              },
-            };
-          });
+              }
+            });
+          }
+        }
+        return clinics;
       }),
 
-      // Populate cache with clinics.
       tap((clinics: Clinic[]) => {
-        // TODO
+        // Populate cache
+        this.clincisCache = clinics;
       })
     );
-
   }
 
   /**
