@@ -8,11 +8,10 @@
     <mat-card-content>
         <google-map width="100%">
             <map-marker
-                *ngFor="let marker of markers"
-                [position]="marker.position"
-                [label]="marker.label"
-                [title]="marker.title"
-                [options]="marker.options"
+                *ngFor="let clinic of clinics"
+                [position]="clinic.position"
+                [label]="clinic.name"
+                [title]="clinic.name"
             >
   </map-marker>
 

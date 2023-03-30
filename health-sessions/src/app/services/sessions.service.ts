@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { map, Observable, of, tap } from 'rxjs';
 
 // TODO: Move interfaces to separate file.
+
 interface HealthSession {
   sessionDuration?: number;
   startTime?: Date;
@@ -27,6 +28,15 @@ interface AggregateSessionData {
   averageDuration?: number|null;
   averageDistance?: number|null;
   averageAge?: number|null;
+}
+
+// TODO: Do I need to consider undefined / NaN lat/lngs?
+/**
+ * A clinic by name and position.
+ */
+export interface Clinic {
+  name: string;
+  position: google.maps.LatLngLiteral;
 }
 
 const NUM_HOURS_IN_DAY = 24;
@@ -71,6 +81,21 @@ export class SessionsService {
   private durationCounts$: Observable<number[]>|undefined;
 
   constructor(private http: HttpClient) {}
+
+  getClinicLocations() {
+    return this.sessions$.pipe(
+      map((sessions: HealthSession[]) =>
+        sessions  // TODO: map to Marker (define Marker type here)
+      ),
+
+      // Populate cache with sessions on the given date.
+      tap((sessions: HealthSession[]) => {
+        // TODO: cache response
+        // The type here will not be HealthSession
+      })
+    );
+
+  }
 
   /**
    * @param queryDateString the date to query for number of sessions. Should
@@ -239,7 +264,7 @@ export class SessionsService {
     if (maybeResult !== undefined) {
       return of(maybeResult);
     }
-    
+
     return this.sessions$.pipe(
       map((sessions: HealthSession[]) =>
         sessions.filter((session: HealthSession) => {

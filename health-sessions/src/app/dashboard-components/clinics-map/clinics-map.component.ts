@@ -1,55 +1,38 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { GoogleMap } from '@angular/google-maps';
 
+import { Clinic } from 'src/app/services/sessions.service';
+
 @Component({
   selector: 'clinics-map',
   templateUrl: './clinics-map.component.html',
   styleUrls: ['./clinics-map.component.scss']
 })
 export class ClinicsMapComponent implements OnInit, AfterViewInit {
-  // google.maps.LatLngLiteral
-  // TODO: Figure out the type here
-  markers: any[] = [];
-
-  // First just display one pin to get a feel for the required types.
-  
-  // "clinic_name":"Central Sq Post Office \/ Cambridge City Hall at Mass Ave \/ Pleasant St",
-  // "clinic latitude":"42.366426",
-  // "clinic_longitude":"-71.105495",
-
-  // "clinic_name":"MIT at Mass Ave \/ Amherst St",
-  // "clinic latitude":"42.3581",
-  // "clinic_longitude":"-71.093198",
+  clinics: Clinic[] = [];
   
   @ViewChild(GoogleMap) map!: GoogleMap;
 
   // TODO: Implement method on SessionsService to get list of markers (lat, long, name)
   ngOnInit(): void {
-    // TODO: title doesn't seem to show up in any way. only label appears.
-    this.markers.push({
+    this.clinics.push({
       position: {
         lat: 42.366426,
         lng: -71.105495,
       },
-      label: {
-        text: 'Central Sq Post Office \/ Cambridge City Hall at Mass Ave \/ Pleasant St',
-      },
-      title: 'Central Sq Post Office \/ Cambridge City Hall at Mass Ave \/ Pleasant St',
+      name: 'Central Sq Post Office \/ Cambridge City Hall at Mass Ave \/ Pleasant St',
     },
     {
       position: {
         lat: 42.3581,
         lng: -71.093198,
       },
-      label: {
-        text: 'MIT at Mass Ave \/ Amherst St',
-      },
-      title: 'MIT at Mass Ave \/ Amherst St',
+      name: 'MIT at Mass Ave \/ Amherst St',
     });
   }
 
   ngAfterViewInit(){
-    const bounds = this.getBounds(this.markers);
+    const bounds = this.getBounds(this.clinics);
     this.map.googleMap!.fitBounds(bounds);
   }
 
