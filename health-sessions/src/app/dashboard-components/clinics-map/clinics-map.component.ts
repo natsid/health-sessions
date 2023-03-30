@@ -39,32 +39,17 @@ export class ClinicsMapComponent implements OnInit {
         );
   }
 
-  // TODO: Implement method on SessionsService to get list of markers (lat, long, name)
   ngOnInit(): void {
     this.sessionsService.getClinics().subscribe(
       (clinics: Clinic[]) =>  this.clinics.push(...clinics)
     );
-
-    // TODO: remove
-    this.clinics.push({
-      position: {
-        lat: 42.366426,
-        lng: -71.105495,
-      },
-      name: 'Central Sq Post Office \/ Cambridge City Hall at Mass Ave \/ Pleasant St',
-    },
-    {
-      position: {
-        lat: 42.3581,
-        lng: -71.093198,
-      },
-      name: 'MIT at Mass Ave \/ Amherst St',
-    });
   }
 
   fitMapBounds(googleMap: GoogleMap) {
-    const bounds = ClinicsMapComponent.getBounds(this.clinics);
-    googleMap.googleMap!.fitBounds(bounds);
+    if (this.clinics.length > 0) {
+      const bounds = ClinicsMapComponent.getBounds(this.clinics);
+      googleMap.googleMap!.fitBounds(bounds);
+    }
   }
 
   /**
