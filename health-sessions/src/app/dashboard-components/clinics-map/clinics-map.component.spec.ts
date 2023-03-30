@@ -1,4 +1,6 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { AppModule } from 'src/app/app.module';
 
 import { ClinicsMapComponent } from './clinics-map.component';
 
@@ -8,7 +10,11 @@ describe('ClinicsMapComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ClinicsMapComponent ]
+      declarations: [ ClinicsMapComponent ],
+      imports: [
+        AppModule,
+        HttpClientTestingModule,
+      ]
     })
     .compileComponents();
 
