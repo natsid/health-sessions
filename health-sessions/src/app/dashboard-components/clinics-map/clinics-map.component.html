@@ -6,8 +6,9 @@
     </mat-card-header>
 
     <mat-card-content>
+        Work-in-progres...
+        
         <div *ngIf="apiLoaded | async">
-            API is loaded
             <google-map width="100%">
                 <map-marker
                     *ngFor="let clinic of clinics"

@@ -31,6 +31,7 @@ export class ClinicsMapComponent implements OnInit {
    * https://console.cloud.google.com/google/maps-apis/credentials.
    */
   constructor(httpClient: HttpClient) {
+    // Lazy load the Maps API
     this.apiLoaded = httpClient.jsonp(`https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}`, 'callback')
         .pipe(
           map(() => true),
