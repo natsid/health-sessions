@@ -6,15 +6,17 @@
     </mat-card-header>
 
     <mat-card-content>
-        <google-map width="100%">
-            <map-marker
-                *ngFor="let clinic of clinics"
-                [position]="clinic.position"
-                [label]="clinic.name"
-                [title]="clinic.name"
-            >
-  </map-marker>
-
-        </google-map>
+        <div *ngIf="apiLoaded | async">
+            API is loaded
+            <google-map width="100%">
+                <map-marker
+                    *ngFor="let clinic of clinics"
+                    [position]="clinic.position"
+                    [label]="clinic.name"
+                    [title]="clinic.name"
+                >
+                </map-marker>
+            </google-map>
+        </div>
     </mat-card-content>
 </mat-card>

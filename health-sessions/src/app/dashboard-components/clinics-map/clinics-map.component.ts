@@ -1,17 +1,43 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { GoogleMap } from '@angular/google-maps';
+import { catchError, map, Observable, of, shareReplay } from 'rxjs';
 
 import { Clinic } from 'src/app/services/sessions.service';
+import { MAPS_API_KEY } from './maps-api-key';
 
 @Component({
   selector: 'clinics-map',
   templateUrl: './clinics-map.component.html',
   styleUrls: ['./clinics-map.component.scss']
 })
-export class ClinicsMapComponent implements OnInit, AfterViewInit {
+export class ClinicsMapComponent implements OnInit {
   clinics: Clinic[] = [];
   
-  @ViewChild(GoogleMap) map!: GoogleMap;
+  @ViewChild(GoogleMap) set googleMap(googleMap: GoogleMap) {
+    // The element won't exist until after the Maps API is loaded.
+    if (googleMap) {
+      this.fitMapBounds(googleMap);
+    }
+  }
+
+  apiLoaded: Observable<boolean>;
+  // apiLoaded: ReplaySubject<boolean>;
+
+  /**
+   * Important note: In order for the Maps API to be loaded, you must create
+   * a maps-api-key.ts file that exports member MAPS_API_KEY which is a
+   * valid Maps API key. Navigate to the following to find your keys:
+   * https://console.cloud.google.com/google/maps-apis/credentials.
+   */
+  constructor(httpClient: HttpClient) {
+    this.apiLoaded = httpClient.jsonp(`https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}`, 'callback')
+        .pipe(
+          map(() => true),
+          catchError(() => of(false)),
+          shareReplay(),
+        );
+  }
 
   // TODO: Implement method on SessionsService to get list of markers (lat, long, name)
   ngOnInit(): void {
@@ -31,30 +57,33 @@ export class ClinicsMapComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngAfterViewInit(){
-    const bounds = this.getBounds(this.clinics);
-    this.map.googleMap!.fitBounds(bounds);
+  fitMapBounds(googleMap: GoogleMap) {
+    const bounds = ClinicsMapComponent.getBounds(this.clinics);
+    googleMap.googleMap!.fitBounds(bounds);
   }
 
   /**
-   * @param markers all the markers to be displayed
-   * @returns appropriate bounds such that all markers are in view
+   * @param clinics all the clinics to include; must have at least one
+   *   element, else throws error
+   * @returns appropriate NESW bounds such that all clinics are in view
    */
-  getBounds(markers: any[]) {
-    let north;
-    let south;
-    let east;
-    let west;
-  
-    for (const marker of markers){
-      // set the coordinates to marker's lat and lng on the first run.
-      // if the coordinates exist, get max or min depends on the coordinates.
-      north = north !== undefined ? Math.max(north, marker.position.lat) : marker.position.lat;
-      south = south !== undefined ? Math.min(south, marker.position.lat) : marker.position.lat;
-      east = east !== undefined ? Math.max(east, marker.position.lng) : marker.position.lng;
-      west = west !== undefined ? Math.min(west, marker.position.lng) : marker.position.lng;
+  static getBounds(clinics: Clinic[]) {
+    if (clinics.length == 0) {
+      throw Error('cannot get bounds because there are no elements in clinics');
+    }
+
+    let north = clinics[0].position.lat;
+    let south = clinics[0].position.lat;
+    let east = clinics[0].position.lng;
+    let west = clinics[0].position.lng;
+    
+    for (let i = 1; i < clinics.length; i++) {
+      north = Math.max(north, clinics[i].position.lat);
+      south = Math.min(south, clinics[i].position.lat);
+      east = Math.max(east, clinics[i].position.lng);
+      west = Math.min(west, clinics[i].position.lng);
     };
-  
+ 
     const bounds = { north, south, east, west };
   
     return bounds;
